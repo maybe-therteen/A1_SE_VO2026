@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fahrradverleih – Dashboard &amp; Verwaltung</title>
+    <meta name="description" content="Fahrradverleih mit Dashboard, Fahrrad- und Kundenverwaltung, flexiblen Reservierungen und stundenweiser Abrechnung.">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand" data-nav="dashboard">🚲 Fahrradverleih</div>
+            <nav class="nav-links">
+                <a href="#dashboard" class="nav-link active" data-nav="dashboard">Dashboard</a>
+                <a href="#bikes" class="nav-link" data-nav="bikes">Fahrräder</a>
+                <a href="#persons" class="nav-link" data-nav="persons">Personen</a>
+                <a href="#reservations" class="nav-link" data-nav="reservations">Reservierungen</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="toast" class="toast hidden" role="status"></div>
+
+        <!-- VIEW: DASHBOARD -->
+        <section id="view-dashboard" class="view active-view">
+            <div class="card-panel">
+                <h1 class="section-title">Dashboard</h1>
+                <div class="title-underline"></div>
+
+                <div class="stats-grid">
+                    <div class="stat-card stat-purple">
+                        <span class="stat-label">Verfügbare Fahrräder</span>
+                        <span class="stat-value" id="stat-available">–</span>
+                    </div>
+                    <div class="stat-card stat-pink">
+                        <span class="stat-label">Ausgeliehene Fahrräder</span>
+                        <span class="stat-value" id="stat-rented">–</span>
+                    </div>
+                    <div class="stat-card stat-blue">
+                        <span class="stat-label">Gesamt Fahrräder</span>
+                        <span class="stat-value" id="stat-total">–</span>
+                    </div>
+                    <div class="stat-card stat-green">
+                        <span class="stat-label">Registrierte Personen</span>
+                        <span class="stat-value" id="stat-persons">–</span>
+                    </div>
+                </div>
+
+                <div class="mini-stats">
+                    <div class="mini-stat">
+                        <span class="mini-label">Geplante Reservierungen</span>
+                        <span class="mini-value" id="stat-upcoming">–</span>
+                    </div>
+                    <div class="mini-stat mini-warn">
+                        <span class="mini-label">Überfällige Rückgaben</span>
+                        <span class="mini-value" id="stat-overdue">–</span>
+                    </div>
+                    <div class="mini-stat mini-money">
+                        <span class="mini-label">Umsatz (abgeschlossen)</span>
+                        <span class="mini-value" id="stat-revenue">–</span>
+                    </div>
+                </div>
+
+                <h2 class="sub-heading">Schnellzugriff</h2>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" data-nav="bikes">Fahrräder verwalten</button>
+                    <button class="btn btn-primary" data-nav="persons">Personen verwalten</button>
+                    <button class="btn btn-success" id="btn-open-rental-modal">Neue Ausleihe / Reservierung</button>
+                </div>
+
+                <div class="dashboard-active-section">
+                    <div class="section-header-row">
+                        <h2 class="sub-heading">Aktuell ausgeliehen</h2>
+                        <a href="#reservations" class="link-more" data-nav="reservations">Alle Reservierungen &amp; Historie →</a>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Fahrrad (Nr. &amp; Typ)</th>
+                                    <th>Kunde</th>
+                                    <th>Abgeholt</th>
+                                    <th>Geplante Rückgabe</th>
+                                    <th>Preis (bisher)</th>
+                                    <th>Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-active-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-active-section">
+                    <h2 class="sub-heading">Nächste Abholungen</h2>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Fahrrad</th>
+                                    <th>Kunde</th>
+                                    <th>Beginn</th>
+                                    <th>Dauer</th>
+                                    <th>Preis (geplant)</th>
+                                    <th>Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-upcoming-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: FAHRRÄDER -->
+        <section id="view-bikes" class="view">
+            <div class="card-panel">
+                <h1 class="section-title">Fahrrad-Verwaltung</h1>
+                <p class="section-subtitle">Bestand nach Inventarnummer, Typ, Rahmenhöhe, Stundenpreis und Verfügbarkeit</p>
+                <div class="title-underline"></div>
+
+                <form id="form-add-bike" class="inline-form">
+                    <div class="form-group">
+                        <label for="bike-number">Fahrrad-Nr.</label>
+                        <input type="text" id="bike-number" placeholder="z.B. BIKE-121" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bike-type">Typ</label>
+                        <select id="bike-type" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="bike-frame">Rahmenhöhe (cm)</label>
+                        <input type="number" id="bike-frame" min="30" max="65" value="52" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bike-rate">Preis pro Stunde (€)</label>
+                        <input type="number" id="bike-rate" min="0" max="100" step="0.5" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" id="btn-add-bike">+ Fahrrad hinzufügen</button>
+                    </div>
+                </form>
+
+                <div class="filter-bar filter-bar-3">
+                    <input type="text" id="filter-bike-search" placeholder="Suche nach Nummer oder Typ (z.B. BIKE-102, E-Bike)…">
+                    <select id="filter-bike-type"><option value="all">Alle Typen</option></select>
+                    <select id="filter-bike-status">
+                        <option value="all">Alle Status</option>
+                        <option value="available">Nur Verfügbare</option>
+                        <option value="rented">Nur Ausgeliehene</option>
+                    </select>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nr.</th>
+                                <th>Typ</th>
+                                <th>Rahmen</th>
+                                <th>€/Std.</th>
+                                <th>Status</th>
+                                <th>Aktuell / Nächste Reservierung</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bikes-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: PERSONEN -->
+        <section id="view-persons" class="view">
+            <div class="card-panel">
+                <h1 class="section-title">Personen-Verwaltung</h1>
+                <p class="section-subtitle">Registrierte Kundinnen und Kunden verwalten</p>
+                <div class="title-underline"></div>
+
+                <form id="form-add-person" class="inline-form">
+                    <div class="form-group">
+                        <label for="person-name">Vor- und Nachname</label>
+                        <input type="text" id="person-name" placeholder="z.B. Maria Wagner" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="person-email">E-Mail</label>
+                        <input type="email" id="person-email" placeholder="maria.wagner@example.at" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="person-phone">Telefon</label>
+                        <input type="text" id="person-phone" placeholder="+43 664 1234567">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success" id="btn-add-person">+ Person registrieren</button>
+                    </div>
+                </form>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>E-Mail</th>
+                                <th>Telefon</th>
+                                <th>Offene Ausleihen</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="persons-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: RESERVIERUNGEN -->
+        <section id="view-reservations" class="view">
+            <div class="card-panel">
+                <div class="section-header-row">
+                    <div>
+                        <h1 class="section-title">Reservierungen &amp; Historie</h1>
+                        <p class="section-subtitle">Flexibler Beginn, gebuchte Dauer und stundenweise Abrechnung – vollständig nachvollziehbar</p>
+                    </div>
+                    <button class="btn btn-success" id="btn-open-rental-modal-2">+ Neue Ausleihe</button>
+                </div>
+                <div class="title-underline"></div>
+
+                <div class="filter-bar">
+                    <input type="text" id="filter-res-search" placeholder="Suche nach Kunde, Fahrrad-Nr. oder Typ…">
+                    <select id="filter-res-status">
+                        <option value="all">Alle</option>
+                        <option value="Aktiv">Aktiv</option>
+                        <option value="Reserviert">Reserviert</option>
+                        <option value="Zurückgegeben">Zurückgegeben</option>
+                        <option value="Storniert">Storniert</option>
+                    </select>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Fahrrad</th>
+                                <th>Kunde</th>
+                                <th>Beginn</th>
+                                <th>Geplantes Ende</th>
+                                <th>Rückgabe</th>
+                                <th>Preis</th>
+                                <th>Status</th>
+                                <th>Notiz</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservations-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: NEUE AUSLEIHE -->
+    <div id="modal-rental" class="modal-backdrop hidden">
+        <div class="modal-card" role="dialog" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <h3 id="modal-title">Neue Ausleihe / Reservierung</h3>
+                <button class="modal-close" id="btn-close-modal" aria-label="Schließen">&times;</button>
+            </div>
+            <form id="form-new-rental">
+                <div class="form-group-stack">
+                    <label for="rental-person">Kunde</label>
+                    <select id="rental-person" required></select>
+                </div>
+
+                <div class="form-group-stack">
+                    <label>Beginn</label>
+                    <div class="segmented">
+                        <label><input type="radio" name="rental-start-mode" value="now" checked> Sofort</label>
+                        <label><input type="radio" name="rental-start-mode" value="later"> Später</label>
+                    </div>
+                    <input type="datetime-local" id="rental-start" class="hidden">
+                </div>
+
+                <div class="form-group-stack">
+                    <label for="rental-duration">Dauer</label>
+                    <div class="duration-row">
+                        <input type="number" id="rental-duration" min="1" value="2" required>
+                        <select id="rental-unit">
+                            <option value="1">Stunden</option>
+                            <option value="24">Tage</option>
+                        </select>
+                    </div>
+                    <div class="chip-row">
+                        <button type="button" class="chip" data-hours="1">1 Std.</button>
+                        <button type="button" class="chip" data-hours="3">3 Std.</button>
+                        <button type="button" class="chip" data-hours="8">Ganztags</button>
+                        <button type="button" class="chip" data-hours="24">1 Tag</button>
+                        <button type="button" class="chip" data-hours="72">3 Tage</button>
+                    </div>
+                </div>
+
+                <div class="form-group-stack">
+                    <label for="rental-bike">Freies Fahrrad im Zeitraum</label>
+                    <select id="rental-bike" required></select>
+                    <small class="hint" id="rental-bike-hint"></small>
+                </div>
+
+                <div class="form-group-stack">
+                    <label for="rental-notes">Notiz (optional)</label>
+                    <input type="text" id="rental-notes" placeholder="z.B. inkl. Helm &amp; Schloss">
+                </div>
+
+                <div class="price-preview" id="price-preview">–</div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success" id="btn-submit-rental">Buchen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

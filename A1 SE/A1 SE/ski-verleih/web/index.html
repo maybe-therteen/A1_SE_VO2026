@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ski-Verleih – Dashboard & Verwaltung</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand" data-nav="dashboard">Ski-Verleih</div>
+            <nav class="nav-links">
+                <a href="#dashboard" class="nav-link active" data-nav="dashboard">Dashboard</a>
+                <a href="#skis" class="nav-link" data-nav="skis">Ski-Verwaltung</a>
+                <a href="#persons" class="nav-link" data-nav="persons">Personen</a>
+                <a href="#reservations" class="nav-link" data-nav="reservations">Reservierungen</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="toast" class="toast hidden"></div>
+
+        <!-- VIEW: DASHBOARD -->
+        <section id="view-dashboard" class="view active-view">
+            <div class="card-panel">
+                <h1 class="section-title">Dashboard</h1>
+                <div class="title-underline"></div>
+
+                <div class="stats-grid">
+                    <div class="stat-card stat-purple">
+                        <span class="stat-label">Verfügbare Ski</span>
+                        <span class="stat-value" id="stat-available">17</span>
+                    </div>
+                    <div class="stat-card stat-pink">
+                        <span class="stat-label">Ausgeliehene Ski</span>
+                        <span class="stat-value" id="stat-rented">3</span>
+                    </div>
+                    <div class="stat-card stat-blue">
+                        <span class="stat-label">Gesamt Ski</span>
+                        <span class="stat-value" id="stat-total">20</span>
+                    </div>
+                    <div class="stat-card stat-green">
+                        <span class="stat-label">Registrierte Personen</span>
+                        <span class="stat-value" id="stat-persons">10</span>
+                    </div>
+                </div>
+
+                <h2 class="sub-heading">Schnellzugriff</h2>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" data-nav="skis">Ski verwalten</button>
+                    <button class="btn btn-primary" data-nav="persons">Personen verwalten</button>
+                    <button class="btn btn-success" id="btn-open-rental-modal">Neue Ausleihe</button>
+                </div>
+
+                <div class="dashboard-active-section">
+                    <div class="section-header-row">
+                        <h2 class="sub-heading">Aktuell ausgeliehene Ski (Nachvollziehbarkeit)</h2>
+                        <a href="#reservations" class="link-more" data-nav="reservations">Alle Reservierungen & Historie →</a>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ausleihe #</th>
+                                    <th>Ski (Nr. &amp; Typ)</th>
+                                    <th>Kunde / Person</th>
+                                    <th>Ausgeliehen seit</th>
+                                    <th>Notiz</th>
+                                    <th>Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-active-rentals-body">
+                                <!-- Dynamisch per JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: SKI-VERWALTUNG -->
+        <section id="view-skis" class="view">
+            <div class="card-panel">
+                <div class="section-header-row">
+                    <div>
+                        <h1 class="section-title">Ski-Verwaltung</h1>
+                        <p class="section-subtitle">Bestand nach Inventarnummer, Ski-Typ, Länge und Verfügbarkeit verwalten</p>
+                    </div>
+                </div>
+                <div class="title-underline"></div>
+
+                <form id="form-add-ski" class="inline-form">
+                    <div class="form-group">
+                        <label for="ski-number">Ski-Nr. (Inventar)</label>
+                        <input type="text" id="ski-number" placeholder="z.B. SKI-121" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ski-type">Ski-Typ</label>
+                        <select id="ski-type" required>
+                            <option value="Allround">Allround</option>
+                            <option value="Race">Race</option>
+                            <option value="Slalom">Slalom</option>
+                            <option value="Freeride">Freeride</option>
+                            <option value="Touring">Touring</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ski-length">Länge (cm)</label>
+                        <input type="number" id="ski-length" min="80" max="230" value="170" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">+ Ski hinzufügen</button>
+                    </div>
+                </form>
+
+                <div class="filter-bar">
+                    <input type="text" id="filter-ski-search" placeholder="Suche nach Ski-Nummer oder Typ (z.B. SKI-102, Race)...">
+                    <select id="filter-ski-status">
+                        <option value="all">Alle Status</option>
+                        <option value="available">Nur Verfügbare</option>
+                        <option value="rented">Nur Ausgeliehene</option>
+                    </select>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ski-Nr.</th>
+                                <th>Ski-Typ</th>
+                                <th>Länge</th>
+                                <th>Status</th>
+                                <th>Aktueller Ausleiher</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skis-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: PERSONEN -->
+        <section id="view-persons" class="view">
+            <div class="card-panel">
+                <h1 class="section-title">Personen-Verwaltung</h1>
+                <p class="section-subtitle">Registrierte Kundinnen und Kunden verwalten</p>
+                <div class="title-underline"></div>
+
+                <form id="form-add-person" class="inline-form">
+                    <div class="form-group">
+                        <label for="person-name">Vor- und Nachname</label>
+                        <input type="text" id="person-name" placeholder="z.B. Maria Wagner" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="person-email">E-Mail</label>
+                        <input type="email" id="person-email" placeholder="maria.wagner@example.at" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="person-phone">Telefon</label>
+                        <input type="text" id="person-phone" placeholder="+43 664 1234567">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">+ Person registrieren</button>
+                    </div>
+                </form>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>E-Mail</th>
+                                <th>Telefon</th>
+                                <th>Aktive Ausleihen</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="persons-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: RESERVIERUNGEN / AUSLEIHE -->
+        <section id="view-reservations" class="view">
+            <div class="card-panel">
+                <div class="section-header-row">
+                    <div>
+                        <h1 class="section-title">Reservierungen &amp; Ausleih-Historie</h1>
+                        <p class="section-subtitle">Nachvollziehbare Dokumentation aller aktiven und abgeschlossenen Ski-Ausleihen (inkl. Ski-Nr. + Typ)</p>
+                    </div>
+                    <button class="btn btn-success" id="btn-open-rental-modal-2">+ Neue Ausleihe</button>
+                </div>
+                <div class="title-underline"></div>
+
+                <div class="filter-bar">
+                    <input type="text" id="filter-res-search" placeholder="Suche nach Kunde, Ski-Nummer oder Ski-Typ...">
+                    <select id="filter-res-status">
+                        <option value="all">Alle Ausleihen (Aktiv &amp; Historie)</option>
+                        <option value="active">Nur Aktive Ausleihen</option>
+                        <option value="returned">Nur Zurückgegebene</option>
+                    </select>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ski-Nr.</th>
+                                <th>Ski-Typ &amp; Länge</th>
+                                <th>Kunde / Person</th>
+                                <th>Ausleihbeginn</th>
+                                <th>Rückgabe</th>
+                                <th>Status</th>
+                                <th>Notiz</th>
+                                <th>Aktion</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservations-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: NEUE AUSLEIHE -->
+    <div id="modal-rental" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Neue Ski-Ausleihe erfassen</h3>
+                <button class="modal-close" id="btn-close-modal">&times;</button>
+            </div>
+            <form id="form-new-rental">
+                <div class="form-group-stack">
+                    <label for="rental-person">Kunde / Person auswählen</label>
+                    <select id="rental-person" required></select>
+                </div>
+                <div class="form-group-stack">
+                    <label for="rental-ski">Verfügbaren Ski auswählen (Nr. + Typ + Länge)</label>
+                    <select id="rental-ski" required></select>
+                </div>
+                <div class="form-group-stack">
+                    <label for="rental-notes">Bemerkung / Verwendungszweck (optional)</label>
+                    <input type="text" id="rental-notes" placeholder="z.B. Ganztags-Ausleihe inkl. Stöcke & Helm">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success">Ausleihe verbindlich starten</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
